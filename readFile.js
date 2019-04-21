@@ -5,6 +5,7 @@ var inputFile;
 var letters = /^[0-9a-zA-Z]+$/;
 var button = document.getElementById("print");
 var trackList = [];
+var timeList = [];
 button.addEventListener("click",printText);
 document.getElementById('file').onchange = function(){
 
@@ -26,9 +27,9 @@ function printText(){
   // console.log(inputFile);
   // var i = inputFile.search("SESSION NAME:");
   // console.log("SESSION NAME = "+inputFile[i+1]);
-  // getSessionName();
-  // getTrackInfo();
-  writeXL();
+  getSessionName();
+  getTrackInfo();
+  // writeXL();
 }
 
 function getSessionName(){
@@ -43,7 +44,7 @@ function getSessionName(){
       break;
     }
   }
-  console.log("Session name:"+temp);
+  // console.log("Session name:"+temp);
 }
 
 function getTrackInfo(){
@@ -70,15 +71,33 @@ function getTrackInfo(){
       while(lineFile[i].length>0){
         temp = lineFile[i].split("\t");
         i++;
-        track.clipList.push(new Clip(temp[2],temp[3],temp[4],temp[5]));
+        var newClip = new Clip(temp[2],temp[3],temp[4],temp[5]);
+        track.clipList.push(newClip);
+
+        var startTime = {
+          timeCode: newClip.startTime,
+          frames: newClip.startTimeFrames
+        };
+
+        var endTime = {
+          timeCode: newClip.endTime,
+          frames: newClip.endTimeFrames
+        };
+
+        timeList.push(startTime);
+        timeList.push(endTime);
+
       }
 
       trackList.push(track);
 
+      
     } 
 
   }
-  console.log(trackList);
+  // console.log(trackList);
+  timeList.sort(function(a, b){return a.frames - b.frames});
+  console.log(timeList);
 }
 
 class Clip{
@@ -87,8 +106,21 @@ class Clip{
     this.startTime = startTime;
     this.endTime = endTime;
     this.duration = duration;
-    this.clipList= new Array() 
+    this.startTimeFrames = this.convertToFrames(startTime);
+    this.endTimeFrames = this.convertToFrames(endTime);
   }; 
+
+  convertToFrames(time){
+    var temp = time.trim();
+    temp = temp.split(":");
+    var hoursFrames = (parseInt(temp[0]))*60*60*30;
+    var minutesFrames =  (parseInt(temp[1]))*60*30;
+    var secondsFrames = (parseInt(temp[2]))*30;
+    var frames = parseInt(temp[3]);
+    var totalFrames = parseInt(hoursFrames)+parseInt(minutesFrames)+parseInt(secondsFrames)+parseInt(frames);
+    // console.log(temp+" "+totalFrames);
+    return totalFrames;
+  }
 };
 
 
